@@ -1,0 +1,37 @@
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import java.util.concurrent.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class SistemaPedidosTest {
+
+    private SistemaPedidos sistemaPedidos;
+
+    @BeforeEach
+    public void setUp() {
+        sistemaPedidos = new SistemaPedidos(4); // Inicializamos con 4 hilos, por ejemplo
+    }
+
+    @Test
+    public void testAgregarPedido() {
+        Pedido pedido = new Pedido(1);  // Suponiendo que Pedido tiene un constructor con ID
+        sistemaPedidos.agregarPedido(pedido);
+        assertFalse(sistemaPedidos.getColaPedidos().isEmpty(), "La cola no debería estar vacía después de agregar un pedido.");
+    }
+
+    @Test
+    public void testProcesarPedido() throws Exception {
+        Pedido pedido = new Pedido(1);
+        CompletableFuture<Void> future = sistemaPedidos.procesarPedido(pedido);
+        future.get(5, TimeUnit.SECONDS);  // Esperamos que el pedido se procese en un tiempo razonable
+        assertFalse(sistemaPedidos.getTiemposProcesamiento().isEmpty(), "Debería haberse registrado el tiempo de procesamiento.");
+    }
+
+    @Test
+    public void testProcesarPedidoConExcepcion() {
+        Pedido pedido = new Pedido(1);
+        // Aquí deberíamos hacer que el pedido lance una excepción en alguna etapa
+        CompletableFuture<Void> future = sistemaPedidos.procesarPedido(pedido);
+        assertThrows(Exception.class, () -> future.get(5, TimeUnit.SECONDS), "Debería lanzarse una excepción durante el procesamiento.");
+    }
+}

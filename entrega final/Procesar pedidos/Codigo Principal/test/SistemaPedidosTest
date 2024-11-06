@@ -1,0 +1,59 @@
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.concurrent.*;
+
+public class SistemaPedidosTest {
+    
+    private SistemaPedidos sistema;
+
+    @BeforeEach
+    public void setUp() {
+        sistema = new SistemaPedidos(3); // Crear sistema con 3 hilos por tipo
+    }
+
+    @Test
+    public void testProcesamientoPedidoCompleto() throws InterruptedException {
+        Pedido pedido = new Pedido(1, 5);  // Pedido de prioridad 5
+        CompletableFuture<Void> future = sistema.procesarPedido(pedido);
+        
+        future.join(); // Esperar que se procese completamente
+        assertTrue(future.isDone(), "El pedido debería estar completado.");
+    }
+
+    @Test
+    public void testPrioridadPedidos() {
+        Pedido pedido1 = new Pedido(1, 10);  // Prioridad más baja
+        Pedido pedido2 = new Pedido(2, 1);   // Prioridad más alta
+        
+        sistema.agregarPedido(pedido1);
+        sistema.agregarPedido(pedido2);
+        
+        assertEquals(pedido2, sistema.pollPedido(), "El pedido con prioridad más alta debería ser procesado primero.");
+    }
+
+    @Test
+    public void testCalculoTiempoMedio() throws InterruptedException {
+        Pedido pedido1 = new Pedido(1, 5);
+        Pedido pedido2 = new Pedido(2, 2);
+        
+        sistema.procesarPedido(pedido1).join();
+        sistema.procesarPedido(pedido2).join();
+        
+        sistema.calcularMediaTiempoProcesamiento(); // Solo para validar que no hay errores
+    }
+
+    @Test
+    public void testManejoExcepciones() {
+        Pedido pedido = new Pedido(1, 5);
+        
+        sistema.procesarPedido(pedido);
+        assertDoesNotThrow(() -> {
+            sistema.procesarPedido(pedido).join();
+        }, "No debería lanzar excepciones si el procesamiento falla.");
+    }
+    
+    @AfterEach
+    public void tearDown() {
+        sistema.cerrarSistema(); // Cerrar el sistema de hilos después de cada test
+    }
+}
