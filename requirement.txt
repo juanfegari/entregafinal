@@ -1,3 +1,0 @@
-coverage==7.6.4
-ply==3.11
-sqlparse==0.5.1
